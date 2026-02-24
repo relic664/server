@@ -5,7 +5,8 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Final
 
-from music_assistant_models.enums import ContentType
+from music_assistant_models.config_entries import ConfigEntry
+from music_assistant_models.enums import ConfigEntryType, ContentType, PlayerFeature
 from music_assistant_models.media_items import AudioFormat
 
 from music_assistant.constants import INTERNAL_PCM_FORMAT
@@ -35,15 +36,17 @@ RAOP_DISCOVERY_TYPE: Final[str] = "_raop._tcp.local."
 DACP_DISCOVERY_TYPE: Final[str] = "_dacp._tcp.local."
 
 AIRPLAY_OUTPUT_BUFFER_DURATION_MS: Final[int] = (
-    2000  # Read ahead buffer for cliraop. Output buffer duration for cliap2.
+    2000  # Read ahead buffer for cliraop. Default output buffer duration for cliap2.
 )
+AIRPLAY_OUTPUT_BUFFER_MIN_DURATION_MS: Final[int] = 250  # Minimum output buffer duration permitted.
 AIRPLAY2_MIN_LOG_LEVEL: Final[int] = 3  # Min loglevel to ensure stderr output contains what we need
-AIRPLAY2_CONNECT_TIME_MS: Final[int] = 2500  # Time in ms to allow AirPlay2 device to connect
+AIRPLAY2_CONNECT_TIME_MS: Final[int] = 3300  # Time in ms to allow AirPlay2 device to connect
 RAOP_CONNECT_TIME_MS: Final[int] = 1000  # Time in ms to allow RAOP device to connect
 
 # Per-protocol credential storage keys
 CONF_RAOP_CREDENTIALS: Final[str] = "raop_credentials"
 CONF_AIRPLAY_CREDENTIALS: Final[str] = "airplay_credentials"
+CONF_AIRPLAY_LATENCY: Final[str] = "airplay_latency"
 
 # Legacy credential key (for migration)
 CONF_AP_CREDENTIALS: Final[str] = "ap_credentials"
@@ -79,4 +82,26 @@ AIRPLAY_2_DEFAULT_MODELS = (
     # Models that are known to work better with AirPlay 2 protocol instead of RAOP
     # These use the translated/friendly model names from get_model_info()
     ("Ubiquiti Inc.", "*"),
+    ("LG Electronics", "*"),
 )
+
+PIN_REQUIRED = 0x8
+LEGACY_PAIRING_BIT = 0x200
+BROKEN_AIRPLAY_WARN = ConfigEntry(
+    key="BROKEN_AIRPLAY",
+    type=ConfigEntryType.ALERT,
+    default_value=None,
+    required=False,
+    label="This player is known to have broken AirPlay support. "
+    "Playback may fail or simply be silent. "
+    "There is no workaround for this issue at the moment. \n"
+    "If you already enforced AirPlay 2 on the player and it remains silent, "
+    "this is one of the known broken models. Only remedy is to nag the manufacturer for a fix.",
+)
+
+BASE_PLAYER_FEATURES: Final[set[PlayerFeature]] = {
+    PlayerFeature.PLAY_MEDIA,
+    PlayerFeature.SET_MEMBERS,
+    PlayerFeature.MULTI_DEVICE_DSP,
+    PlayerFeature.VOLUME_SET,
+}
